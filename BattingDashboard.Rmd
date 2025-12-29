@@ -1,0 +1,656 @@
+---
+title: "Batting Dashboard"
+author: "DennieT"
+date: "2025-12-28"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Import packages
+```{r}
+#library("tidyverse") #Not needed for data cleanup
+library("lubridate")
+library(dplyr)
+
+library(ggplot2)
+library(shiny)
+library(shinythemes)
+library(DT)
+```
+
+
+
+Set Directory
+```{r}
+here::i_am("BattingDashboard.Rmd")
+```
+
+
+
+Load data
+```{r}
+BatData <- read.csv("BattingData2025.csv")
+```
+
+
+Data Cleanup
+```{r}
+#Change Date column to "Date" data type
+BatData$Date = as.Date(BatData$Date,
+                     format = "%m/%d/%y") # convert to date
+
+#class(BatData$Date) Can check in console the data type to confirm
+```
+
+
+
+
+
+
+CALCULATING AN INDIVIDUAL PLAYER STATS
+Calculate Justin's Total Plate Appearance
+```{r}
+#Get all unique Justin's plate appearance
+Justin <- subset(x = BatData, Name == "Justin")
+
+#nrow is the number of unique plate appearance
+JustinTotalPlateAppearance <- nrow(Justin)
+```
+
+
+Calculate Justin's Total At-Bat
+```{r}
+JustinAtBats <- subset(Justin,
+                       Result == "Single" |
+                       Result == "Double" |
+                       Result == "Triple" |
+                       Result == "HR" |
+                       Result == "SO" |
+                       Result == "FO" |
+                       Result == "GO")
+
+# Count them
+JustinTotalAtBats <- nrow(JustinAtBats)
+
+```
+
+
+Calculate Justin's Batting Average
+```{r}
+#Batting Average = (Total hits)/(Total at-bats)
+
+#Calculate Justin's total hits
+JustinHits <- subset(Justin,
+                       Result == "Single" |
+                       Result == "Double" |
+                       Result == "Triple" |
+                       Result == "HR" )
+
+# Count them
+JustinTotalHits <- nrow(JustinHits)
+
+#Calculate batting average
+JustinBatAvg <- JustinTotalHits/JustinTotalAtBats
+```
+
+
+Calculate Justins's On-base percentage (OBP)
+```{r}
+#Calculate number of times Justin got on base
+JustinOnBase <- subset(Justin,
+                       Result == "Single" |
+                       Result == "Double" |
+                       Result == "Triple" |
+                       Result == "BB" |
+                       Result == "HBP" |
+                       Result == "HR" )
+
+# Count them
+JustinTotalOnBase <- nrow(JustinOnBase)
+
+JustinOBP <- JustinTotalOnBase/JustinTotalPlateAppearance
+```
+
+
+Calculate Justins's Sluggage Percentage (SLG)
+Slugging Percentage = (Total Bases) / (At-Bats) 
+Where:
+Total Bases = (Singles × 1) + (Doubles × 2) + (Triples × 3) + (Home Runs × 4)
+```{r}
+# Count Singles
+JustinSingles <- nrow(subset(Justin, Result == "Single"))
+
+# Count Doubles
+JustinDoubles <- nrow(subset(Justin, Result == "Double"))
+
+# Count Triples
+JustinTriples <- nrow(subset(Justin, Result == "Triple"))
+
+# Count Home Runs
+JustinHR <- nrow(subset(Justin, Result == "HR"))
+
+
+JustinTotalBases <- (JustinSingles * 1) + 
+                    (JustinDoubles * 2) + 
+                    (JustinTriples * 3) + 
+                    (JustinHR * 4)
+
+JustinSLG <- JustinTotalBases / JustinTotalAtBats
+```
+
+
+Calculate Justins's On-base percentage plus Slug percentage (OPS)
+```{r}
+JustinOPS <- JustinOBP + JustinSLG
+```
+
+
+
+Pie chart of Justin's strikes/balls
+```{r}
+# Step 1: Summarize data
+JustinBalls <- sum(Justin$Ball, na.rm = TRUE)
+JustinStrikes <- sum(Justin$Strike, na.rm = TRUE)
+JustinTotalPitch <- JustinBalls + JustinStrikes
+
+# Step 2: Create a data frame
+pitch_seen_df <- data.frame(
+  PitchType = c("Ball", "Strike"),
+  Count = c(JustinBalls, JustinStrikes)
+)
+
+# Step 3: Calculate percentage and label position
+pitch_seen_df$Percentage <- pitch_seen_df$Count / JustinTotalPitch
+
+
+# Step 4: Plot with ggplot2
+ggplot(pitch_seen_df, aes(x = "", y = Percentage, fill = PitchType)) +
+  geom_bar(stat = "identity", width = 1, color = "black") +
+  coord_polar("y") +
+  geom_text(aes(label = paste0(round(Percentage * 100), "%")),
+            position = position_stack(vjust = 0.5),
+            color = "black", size = 5, fontface = "bold") +
+  scale_fill_manual(values = c("skyblue", "tomato")) +
+  theme_void() +
+  ggtitle("Pitches Seen by Justin")
+```
+
+
+
+
+
+
+
+
+Function to calculate Plate Appearance
+```{r}
+PlateAppearance <- function(data, data_column, PlayerName) {
+  
+  # Filter data for the player
+  player_data  <- subset(data, data[[data_column]] == PlayerName)
+  
+  # Check if data exists
+  if (nrow(player_data ) == 0) {
+    stop("No data found for the specified player.")
+  }
+  
+  # Total plate appearances
+  TotalPA <- nrow(player_data )
+  
+   # Return the numeric value
+  return(TotalPA)
+}
+```
+
+
+
+Function to calculate Batting Average
+```{r}
+BatAvg <- function(data, data_column, PlayerName) {
+  
+  # Filter data for the player
+  player_data  <- subset(data, data[[data_column]] == PlayerName)
+  
+  # Check if data exists
+  if (nrow(player_data) == 0) {
+    stop("No data found for the specified player.")
+  }
+  
+  # Define at-bat results
+  AtBats <- subset(player_data,
+                   Result == "Single" |
+                   Result == "Double" |
+                   Result == "Triple" |
+                   Result == "HR" |
+                   Result == "SO" |
+                   Result == "FO" |
+                   Result == "GO")
+  
+  TotalAtBats <- nrow(AtBats)
+  
+  # Initialize batting average
+  PlayerBatAvg <- NA
+  
+  if (TotalAtBats == 0) {
+    warning("Player has 0 at-bats. Batting average is undefined.")
+  } else {
+    # Define hits
+    Hits <- subset(player_data,
+                   Result == "Single" |
+                   Result == "Double" |
+                   Result == "Triple" |
+                   Result == "HR")
+    
+    TotalHits <- nrow(Hits)
+    
+    PlayerBatAvg <- round(TotalHits / TotalAtBats, 3)
+  }
+  
+  return(PlayerBatAvg)
+}
+```
+
+
+
+Function to calculate OPS
+```{r}
+Calculate_OPS <- function(data, data_column, PlayerName) {
+  
+  # Filter data for the player
+  player_data  <- subset(data, data[[data_column]] == PlayerName)
+  
+  # Check if data exists
+  if (nrow(player_data) == 0) {
+    stop("No data found for the specified player.")
+  }
+  
+  # Total plate appearances
+  TotalPA <- nrow(player_data)
+  
+  # Define at-bat results
+  AtBats <- subset(player_data,
+                   Result == "Single" |
+                   Result == "Double" |
+                   Result == "Triple" |
+                   Result == "HR" |
+                   Result == "SO" |
+                   Result == "FO" |
+                   Result == "GO")
+  
+  TotalAtBats <- nrow(AtBats)
+  
+  # Calculate number of times player got on base
+  OnBase <- subset(player_data,
+                   Result == "Single" |
+                   Result == "Double" |
+                   Result == "Triple" |
+                   Result == "BB" |
+                   Result == "HBP" |
+                   Result == "HR")
+  
+  TotalOnBase <- nrow(OnBase)
+  
+  OBP <- TotalOnBase / TotalPA
+  
+  # Count hit types
+  Singles <- nrow(subset(player_data, Result == "Single"))
+  Doubles <- nrow(subset(player_data, Result == "Double"))
+  Triples <- nrow(subset(player_data, Result == "Triple"))
+  HR <- nrow(subset(player_data, Result == "HR"))
+  
+  # Calculate total bases
+  BaseScore <- (Singles * 1) + 
+               (Doubles * 2) + 
+               (Triples * 3) + 
+               (HR * 4)
+  
+  # Guard against divide-by-zero
+  if (TotalAtBats == 0) {
+    SLG <- NA
+    warning("Player has zero at-bats; SLG is undefined.")
+  } else {
+    SLG <- BaseScore / TotalAtBats
+  }
+  
+  # Calculate OPS
+  OPS <- OBP + SLG
+  
+  # Return all three stats as a list
+  return(list(
+    OBP = round(OBP, 3),
+    SLG = round(SLG, 3),
+    OPS = round(OPS, 3)
+  ))
+}
+```
+
+
+
+Function to create pie chart of batter pitch seen
+```{r}
+PieChart <- function(data, data_column, PlayerName) {
+  
+  # Filter data for the player
+  player_data  <- subset(data, data[[data_column]] == PlayerName)
+  
+  # Check if data exists
+  if (nrow(player_data) == 0) {
+    stop("No data found for the specified player.")
+  }
+
+  # Step 1: Summarize data
+  PlayerBalls <- sum(player_data$Ball, na.rm = TRUE)
+  PlayerStrikes <- sum(player_data$Strike, na.rm = TRUE)
+  PlayerTotalPitch <- PlayerBalls + PlayerStrikes
+
+  # Guard against division by zero
+  if (PlayerTotalPitch == 0) {
+    stop("Player has no pitches to analyze.")
+  }
+
+  # Step 2: Create a data frame
+  pitch_seen_df <- data.frame(
+    PitchType = c("Ball", "Strike"),
+    Count = c(PlayerBalls, PlayerStrikes)
+  )
+
+  # Step 3: Calculate percentage
+  pitch_seen_df$Percentage <- pitch_seen_df$Count / PlayerTotalPitch
+
+  # Step 4: Plot with ggplot2
+  plot <- ggplot(pitch_seen_df, aes(x = "", y = Percentage, fill = PitchType)) +
+    geom_bar(stat = "identity", width = 1, color = "black") +
+    coord_polar("y") +
+    geom_text(aes(label = paste0(round(Percentage * 100), "%")),
+              position = position_stack(vjust = 0.5),
+              color = "black", size = 5, fontface = "bold") +
+    scale_fill_manual(values = c("skyblue", "tomato")) +
+    theme_void() +
+    ggtitle(paste("Pitches Seen by", PlayerName))
+
+  return(plot)
+}
+
+```
+
+
+
+Test out functions
+```{r}
+PlateAppearance(BatData, "Name", "Justin T.")
+BatAvg(BatData, "Name", "Justin T.")
+Calculate_OPS(BatData, "Name", "Brayan P.")
+PieChart(BatData, "Name", "Brayan P.")
+```
+
+
+
+Table of all player stats
+```{r}
+# Get unique player names
+PlayerNames <- unique(BatData$Name)
+
+# Initialize empty results data frame, add SO and BB columns
+results_df <- data.frame(
+  Name = character(),
+  TotalPA = numeric(),
+  BA = numeric(),
+  OBP = numeric(),
+  SLG = numeric(),
+  OPS = numeric(),
+  RBI = numeric(),
+  SB = numeric(),
+  SO = numeric(),
+  BB = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Loop through each player
+for (player in PlayerNames) {
+  
+  # Calculate OBP, SLG, OPS
+  stats <- Calculate_OPS(BatData, "Name", player)
+  
+  # Calculate Batting Average
+  ba <- BatAvg(BatData, "Name", player)
+  
+  # Get player's data
+  player_data <- subset(BatData, Name == player)
+  
+  # Total plate appearances
+  total_PA <- nrow(player_data)
+  
+  # Sum RBI, SB, SO, and BB
+  total_RBI <- sum(player_data$RBI, na.rm = TRUE)
+  total_SB  <- sum(player_data$StolenBase, na.rm = TRUE)
+  # Count SO and BB from the Result column
+  total_SO <- sum(player_data$Result == "SO", na.rm = TRUE)
+  total_BB <- sum(player_data$Result == "BB", na.rm = TRUE)
+  
+  # Create a row
+  row <- data.frame(
+    Name = player,
+    TotalPA = total_PA,
+    BA = ba,
+    OBP = stats$OBP,
+    SLG = stats$SLG,
+    OPS = stats$OPS,
+    RBI = total_RBI,
+    SB = total_SB,
+    SO = total_SO,
+    BB = total_BB,
+    stringsAsFactors = FALSE
+  )
+  
+  # Append to results
+  results_df <- rbind(results_df, row)
+}
+
+```
+
+
+
+
+Shiny app to click on player for more detail in new tab
+```{r}
+#PieChart function
+PieChart <- function(data, data_column, PlayerName) {
+  player_data  <- subset(data, data[[data_column]] == PlayerName)
+  
+  if (nrow(player_data) == 0) {
+    stop("No data found for the specified player.")
+  }
+
+  PlayerBalls <- sum(player_data$Ball, na.rm = TRUE)
+  PlayerStrikes <- sum(player_data$Strike, na.rm = TRUE)
+  PlayerTotalPitch <- PlayerBalls + PlayerStrikes
+
+  if (PlayerTotalPitch == 0) {
+    stop("Player has no pitches to analyze.")
+  }
+
+  pitch_seen_df <- data.frame(
+    PitchType = c("Ball", "Strike"),
+    Count = c(PlayerBalls, PlayerStrikes)
+  )
+
+  pitch_seen_df$Percentage <- pitch_seen_df$Count / PlayerTotalPitch
+
+  ggplot(pitch_seen_df, aes(x = "", y = Percentage, fill = PitchType)) +
+    geom_bar(stat = "identity", width = 1, color = "black") +
+    coord_polar("y") +
+    geom_text(aes(label = paste0(round(Percentage * 100), "%")),
+              position = position_stack(vjust = 0.5),
+              color = "black", size = 5, fontface = "bold") +
+    scale_fill_manual(values = c("skyblue", "tomato")) +
+    theme_void() +
+    ggtitle(paste("Pitches Seen by", PlayerName))
+}
+
+# UI
+ui <- fluidPage(
+  theme = shinytheme("spacelab"),
+  tags$head(
+    tags$style(HTML("
+      table.dataTable td {
+        font-size: 20px !important;
+      }
+      table.dataTable th {
+        font-size: 18px !important;
+      }
+      #player_stats_table, #team_avg_table {
+        margin-bottom: 20px;
+      }
+    "))
+  ),
+  titlePanel("Batting Stats App"),
+  
+  tabsetPanel(
+    tabPanel("Player Stats",
+      DTOutput("stats_table")
+    ),
+    
+    tabPanel("Player Analysis",
+      h3(textOutput("selected_player_title")),
+      DTOutput("player_stats_table"),
+      DTOutput("team_avg_table"),
+      plotOutput("pitch_pie_chart", height = "500px")
+    ),
+    
+    tabPanel("Glossary",
+  h3("Baseball Statistic Definitions", style = "font-size: 28px; margin-top: 20px;"),
+  tags$ul(style = "font-size: 25px; line-height: 1.8;",
+    tags$li(tags$strong("PA:"), " Plate Appearances – the number of times a player comes to bat."),
+    tags$li(tags$strong("BA:"), " Batting Average – hits divided by at-bats."),
+    tags$li(tags$strong("OBP:"), " On-base Percentage – how often a player gets on base."),
+    tags$li(tags$strong("SLG:"), " Slugging Percentage – a measure of power; total bases divided by at-bats."),
+    tags$li(tags$strong("OPS:"), " On-base Plus Slugging – OBP + SLG."),
+    tags$li(tags$strong("RBI:"), " Runs Batted In – the number of runs a hitter contributes."),
+    tags$li(tags$strong("SB:"), " Stolen Bases – number of times a player advances a base unaided."),
+    tags$li(tags$strong("SO:"), " Strikeouts – number of times the player was struck out."),
+    tags$li(tags$strong("BB:"), " Walks – bases on balls (four balls during an at-bat).")
+     )
+    )
+  )
+)
+
+# Server
+server <- function(input, output, session) {
+  BatData <- read.csv("BattingData2025.csv")
+  BatData$Date <- as.Date(BatData$Date, format = "%m/%d/%y")
+  
+  PlayerNames <- unique(BatData$Name)
+  
+  results_df <- data.frame(
+    Name = character(),
+    TotalPA = numeric(),
+    BA = numeric(),
+    OBP = numeric(),
+    SLG = numeric(),
+    OPS = numeric(),
+    RBI = numeric(),
+    SB = numeric(),
+    SO = numeric(),
+    BB = numeric(),
+    stringsAsFactors = FALSE
+  )
+  
+  for (player in PlayerNames) {
+    stats <- Calculate_OPS(BatData, "Name", player) # Assumed you have this function
+    ba <- BatAvg(BatData, "Name", player)           # Assumed you have this function
+    
+    player_data <- subset(BatData, Name == player)
+    total_PA <- nrow(player_data)
+    total_RBI <- sum(player_data$RBI, na.rm = TRUE)
+    total_SB  <- sum(player_data$StolenBase, na.rm = TRUE)
+    total_SO <- sum(player_data$Result == "SO", na.rm = TRUE)
+    total_BB <- sum(player_data$Result == "BB", na.rm = TRUE)
+
+    row <- data.frame(
+      Name = player,
+      TotalPA = total_PA,
+      BA = ba,
+      OBP = stats$OBP,
+      SLG = stats$SLG,
+      OPS = stats$OPS,
+      RBI = total_RBI,
+      SB = total_SB,
+      SO = total_SO,
+      BB = total_BB,
+      stringsAsFactors = FALSE
+    )
+    
+    results_df <- rbind(results_df, row)
+  }
+  
+  results_df <- results_df[order(-results_df$OPS), ]
+  
+  # Main stats table
+  output$stats_table <- renderDT({
+    datatable(results_df, 
+              options = list(pageLength = 15, scrollX = TRUE),
+              rownames = FALSE,
+              selection = "single")
+  })
+  
+  # Selected player title
+  output$selected_player_title <- renderText({
+    req(input$stats_table_rows_selected)
+    selected <- input$stats_table_rows_selected
+    player_name <- results_df$Name[selected]
+    paste("Stats & Pitch Distribution for", player_name)
+  })
+  
+  # Player stats table
+  output$player_stats_table <- renderDT({
+    req(input$stats_table_rows_selected)
+    selected <- input$stats_table_rows_selected
+    player_stats <- results_df[selected, ]
+    datatable(player_stats,
+              options = list(dom = 't', paging = FALSE),
+              rownames = FALSE,
+              colnames = c("Name", "PA", "BA", "OBP", "SLG", "OPS", "RBI", "SB", "SO", "BB"))
+  })
+  
+  # Team averages table
+  output$team_avg_table <- renderDT({
+    numeric_cols <- sapply(results_df, is.numeric)
+    team_means <- colMeans(results_df[, numeric_cols], na.rm = TRUE)
+    team_means <- round(team_means, 3)
+    
+    team_avg_df <- data.frame(t(team_means))
+    team_avg_df <- cbind(Name = "Team Average", team_avg_df)
+    
+    # Rename TotalPA to PA to match player stats table column name
+    names(team_avg_df)[names(team_avg_df) == "TotalPA"] <- "PA"
+    
+    
+    datatable(team_avg_df,
+              options = list(dom = 't', paging = FALSE),
+              rownames = FALSE,
+              colnames = c("Name", "PA", "BA", "OBP", "SLG", "OPS", "RBI", "SB", "SO", "BB"))
+  })
+  
+  # Pie chart plot
+  output$pitch_pie_chart <- renderPlot({
+    req(input$stats_table_rows_selected)
+    selected <- input$stats_table_rows_selected
+    player_name <- results_df$Name[selected]
+
+    tryCatch({
+      PieChart(BatData, "Name", player_name)
+    }, error = function(e) {
+      ggplot() + 
+        annotate("text", x = 0, y = 0, label = e$message, size = 6, color = "red") +
+        theme_void()
+    })
+  })
+}
+
+# Run the app
+shinyApp(ui, server)
+```
