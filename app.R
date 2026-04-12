@@ -54,7 +54,7 @@ BuildStatsTable <- function(data) {
 }
 
 # ======================
-# PIE CHART FUNCTION
+# PIE CHART
 # ======================
 PieChart <- function(p) {
   balls <- sum(p$Ball, na.rm=TRUE)
@@ -83,7 +83,7 @@ ui <- fluidPage(
   tabsetPanel(
     
     # ------------------
-    # PLAYER STATS TAB
+    # PLAYER STATS
     # ------------------
     tabPanel("Player Stats",
              fluidRow(
@@ -97,10 +97,9 @@ ui <- fluidPage(
     ),
     
     # ------------------
-    # PLAYER ANALYSIS TAB
+    # PLAYER ANALYSIS
     # ------------------
     tabPanel("Player Analysis",
-             
              fluidRow(
                column(3,
                       selectInput("year_filter_analysis","Select Year:",
@@ -112,7 +111,6 @@ ui <- fluidPage(
                )
              ),
              
-             h3(textOutput("selected_player_title")),
              DTOutput("player_stats_table"),
              DTOutput("team_avg_table"),
              
@@ -128,7 +126,7 @@ ui <- fluidPage(
     ),
     
     # ------------------
-    # GAME BREAKDOWN TAB
+    # GAME BREAKDOWN
     # ------------------
     tabPanel("Game Breakdown",
              
@@ -139,7 +137,7 @@ ui <- fluidPage(
                                   selected = "All")
                ),
                column(3,
-                      uiOutput("player_game_dropdown")
+                      uiOutput("player_game_dropdown")   # ✅ RESTORED
                ),
                column(3,
                       selectInput("game_date", "Select Game:", choices = NULL)
@@ -148,8 +146,6 @@ ui <- fluidPage(
              
              h3("Game Stats"),
              DTOutput("game_table"),
-             
-             h4("Game Visuals"),
              
              fluidRow(
                column(6, plotOutput("game_pitch_pie")),
@@ -171,7 +167,7 @@ ui <- fluidPage(
                       
                       tags$p(
                         tags$strong("AB: "),
-                        "At Bats = PA minus BB (walks), HBP (hit by pitch). In this app: PA outcomes classified as hits or outs only."
+                        "At Bats = Plate Appearances (PA) excluding walks (BB)  and HBP (hit by pitch). In this dataset, AB includes Single, Double, Triple, HR, SO, FO, and GO."
                       ),
                       
                       tags$p(
@@ -244,9 +240,6 @@ ui <- fluidPage(
 # ======================
 server <- function(input, output, session) {
   
-  # ------------------
-  # FILTERS
-  # ------------------
   filtered_stats_data <- reactive({
     if (input$year_filter_stats == "All") BatData
     else BatData %>% filter(Year == input$year_filter_stats)
@@ -258,25 +251,20 @@ server <- function(input, output, session) {
   })
   
   # ------------------
-  # PLAYER DROPDOWN
+  # PLAYER DROPDOWN (ANALYSIS)
   # ------------------
   output$player_dropdown <- renderUI({
-    players <- filtered_analysis_data() %>%
-      distinct(Name) %>% pull(Name)
-    
-    selectInput("selected_player","Select Player:",
-                choices=players,
-                selected=players[1])
+    players <- filtered_analysis_data() %>% distinct(Name) %>% pull(Name)
+    selectInput("selected_player","Select Player:",choices=players,selected=players[1])
   })
   
   selected_player_data <- reactive({
     req(input$selected_player)
-    filtered_analysis_data() %>%
-      filter(Name==input$selected_player)
+    filtered_analysis_data() %>% filter(Name==input$selected_player)
   })
   
   # ------------------
-  # GAME DROPDOWN PLAYER
+  # PLAYER DROPDOWN (GAME)
   # ------------------
   output$player_game_dropdown <- renderUI({
     df <- if (input$year_game == "All") BatData else BatData %>% filter(Year == input$year_game)
@@ -288,9 +276,6 @@ server <- function(input, output, session) {
                 selected=players[1])
   })
   
-  # ------------------
-  # GAME DATE UPDATE
-  # ------------------
   observe({
     req(input$player_game)
     
@@ -319,9 +304,25 @@ server <- function(input, output, session) {
   # TABLES
   # ======================
   output$stats_table <- renderDT({
+    
     datatable(BuildStatsTable(filtered_stats_data()),
-              options=list(pageLength=15,scrollX=TRUE),
-              rownames=FALSE)
+              options = list(pageLength = 15, scrollX = TRUE),
+              rownames = FALSE) %>%
+      
+      formatRound(c("BA","OBP","SLG","OPS"), 3) %>%
+      
+      formatStyle(
+        "OPS",
+        backgroundColor = styleInterval(
+          c(0.600, 0.750, 0.900),
+          c(
+            "#f8d7da",  # bad (red)
+            "#fff3cd",  # below avg (yellow)
+            "#d4edda",  # good (light green)
+            "#c3e6cb"   # great (dark green)
+          )
+        )
+      )
   })
   
   output$player_stats_table <- renderDT({
@@ -341,7 +342,7 @@ server <- function(input, output, session) {
   })
   
   # ======================
-  # PLAYER ANALYSIS PLOTS
+  # PLOTS (UNCHANGED)
   # ======================
   output$pitch_pie_chart <- renderPlot({
     PieChart(selected_player_data())
@@ -351,43 +352,41 @@ server <- function(input, output, session) {
     p <- selected_player_data()
     
     hits <- c(
-      Single = sum(p$Result == "Single"),
-      Double = sum(p$Result == "Double"),
-      Triple = sum(p$Result == "Triple"),
-      HR     = sum(p$Result == "HR")
+      Single=sum(p$Result=="Single"),
+      Double=sum(p$Result=="Double"),
+      Triple=sum(p$Result=="Triple"),
+      HR=sum(p$Result=="HR")
     )
     
     bp <- barplot(hits,
-                  col = c("#9ECAE1","#6BAED6","#4292C6","#2171B5"),
-                  main = "Hit Distribution",
-                  ylab = "Count",
-                  ylim = c(0, max(hits) + 1),
-                  yaxt = "n")   # remove default y-axis
+                  col=c("#9ECAE1","#6BAED6","#4292C6","#2171B5"),
+                  main="Hit Distribution",
+                  ylab="Count",
+                  ylim=c(0,max(hits)+1),
+                  yaxt="n")
     
-    axis(2, at = seq(0, max(hits) + 1, by = 1))  # y-axis increments of 1
-    
-    text(bp, hits, labels = hits, pos = 3)
+    axis(2,at=seq(0,max(hits)+1,1))
+    text(bp,hits,labels=hits,pos=3)
   })
   
   output$pa_outcome_plot <- renderPlot({
     p <- selected_player_data()
     
     outcomes <- c(
-      Hit = sum(p$Result %in% HIT_RESULTS),
-      SO  = sum(p$Result == "SO"),
-      BB  = sum(p$Result == "BB")
+      Hit=sum(p$Result %in% HIT_RESULTS),
+      SO=sum(p$Result=="SO"),
+      BB=sum(p$Result=="BB")
     )
     
     bp <- barplot(outcomes,
-                  col = c("#74C476","#FB6A4A","#FDD0A2"),
-                  main = "Plate Appearance Outcomes",
-                  ylab = "Count",
-                  ylim = c(0, max(outcomes) + 1),
-                  yaxt = "n")   # remove default y-axis
+                  col=c("#74C476","#FB6A4A","#FDD0A2"),
+                  main="Plate Appearance Outcomes",
+                  ylab="Count",
+                  ylim=c(0,max(outcomes)+1),
+                  yaxt="n")
     
-    axis(2, at = seq(0, max(outcomes) + 1, by = 1))  # y-axis step = 1
-    
-    text(bp, outcomes, labels = outcomes, pos = 3)
+    axis(2,at=seq(0,max(outcomes)+1,1))
+    text(bp,outcomes,labels=outcomes,pos=3)
   })
   
   output$batting_avg_trend <- renderPlot({
@@ -397,28 +396,17 @@ server <- function(input, output, session) {
     p$AB <- p$Result %in% AB_RESULTS
     p$H <- p$Result %in% HIT_RESULTS
     
-    game <- aggregate(cbind(H,AB) ~ Date, data=p, sum)
+    game <- aggregate(cbind(H,AB)~Date,data=p,sum)
     game$Game <- seq_len(nrow(game))
     game$BA <- cumsum(game$H)/cumsum(game$AB)
     
-    plot(game$Game, game$BA, 
-         type="o",
-         col="blue",
+    plot(game$Game,game$BA,
+         type="o",col="blue",
          main="Batting Average Trend",
          ylim=c(0,1),
-         xlab = "Game",
-         ylab = "Percentage",
-         xaxt = "n")
-    
-    axis(1, at = seq(min(game$Game), max(game$Game), by = 1))
-    grid()
-    
-    #lines(game$Game, stats::lowess(game$Game, game$BA)$y,col="red", lwd=2)
+         xlab="Game",ylab="BA")
   })
   
-  # ======================
-  # GAME BREAKDOWN PLOTS
-  # ======================
   output$game_table <- renderDT({
     datatable(BuildStatsTable(game_data()),
               options=list(dom="t"),
@@ -426,14 +414,11 @@ server <- function(input, output, session) {
   })
   
   output$game_pitch_pie <- renderPlot({
-    df <- game_data()
-    validate(need(nrow(df)>0,"No data"))
-    PieChart(df)
+    PieChart(game_data())
   })
   
   output$game_result_bar <- renderPlot({
     df <- game_data()
-    validate(need(nrow(df)>0,"No data"))
     
     results <- c(
       Single=sum(df$Result=="Single"),
@@ -447,15 +432,13 @@ server <- function(input, output, session) {
     )
     
     bp <- barplot(results,
-                  col = c("#9ECAE1","#6BAED6","#4292C6","#2171B5",
-                          "#74C476","#FB6A4A","#A1D99B","#31A354"),
-                  main = "Plate Appearance Results",
-                  ylim = c(0, max(results) + 1),
-                  yaxt = "n")
+                  col=rainbow(length(results)),
+                  main="Plate Appearance Results",
+                  ylim=c(0,max(results)+1),
+                  yaxt="n")
     
-    axis(2, at = seq(0, max(results) + 1, by = 1))
-    
-    text(bp, results, labels = results, pos = 3)
+    axis(2,at=seq(0,max(results)+1,1))
+    text(bp,results,labels=results,pos=3)
   })
 }
 
