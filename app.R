@@ -137,7 +137,7 @@ ui <- fluidPage(
                                   selected = "All")
                ),
                column(3,
-                      uiOutput("player_game_dropdown")   # ✅ RESTORED
+                      uiOutput("player_game_dropdown")
                ),
                column(3,
                       selectInput("game_date", "Select Game:", choices = NULL)
@@ -146,6 +146,9 @@ ui <- fluidPage(
              
              h3("Game Stats"),
              DTOutput("game_table"),
+             
+             h4("Player Season Averages"),
+             DTOutput("player_avg_table"),
              
              fluidRow(
                column(6, plotOutput("game_pitch_pie")),
@@ -341,8 +344,29 @@ server <- function(input, output, session) {
               rownames=FALSE)
   })
   
+  output$player_avg_table <- renderDT({
+    
+    req(input$player_game)
+    
+    df <- if (input$year_game == "All") {
+      BatData
+    } else {
+      BatData %>% filter(Year == input$year_game)
+    }
+    
+    df <- df %>% filter(Name == input$player_game)
+    
+    validate(need(nrow(df) > 0, "No data"))
+    
+    BuildStatsTable(df) %>%
+      datatable(
+        options = list(dom = "t"),
+        rownames = FALSE
+      )
+  })
+  
   # ======================
-  # PLOTS (UNCHANGED)
+  # PLOTS
   # ======================
   output$pitch_pie_chart <- renderPlot({
     PieChart(selected_player_data())
