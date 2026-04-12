@@ -1,0 +1,62 @@
+Name,Date,Opponent,Location,Inning,Ball,Strike,Result,StolenBase,RBI
+David B.,3/4/2026,Garvey,Away,1,1,0,FO,0,0
+Benjamen M.,3/4/2026,Garvey,Away,1,1,3,SO,0,0
+Noah H.,3/4/2026,Garvey,Away,1,4,1,BB,1,0
+Jordan L.,3/4/2026,Garvey,Away,1,1,3,SO,0,0
+Adrian N.,3/4/2026,Garvey,Away,2,4,0,BB,0,0
+Laylene C.,3/4/2026,Garvey,Away,2,0,3,SO,0,0
+Carwyn L.,3/4/2026,Garvey,Away,2,4,2,BB,1,0
+Timothy C.,3/4/2026,Garvey,Away,2,0,3,SO,0,0
+Abel R.,3/4/2026,Garvey,Away,3,2,0,HBP,0,0
+David B.,3/4/2026,Garvey,Away,3,0,0,GO,1,0
+Benjamen M.,3/4/2026,Garvey,Away,3,2,3,SO,0,0
+Noah H.,3/4/2026,Garvey,Away,3,0,0,Double,0,1
+Justin T.,3/4/2026,Garvey,Away,3,2,3,SO,0,0
+Adrian N.,3/4/2026,Garvey,Away,4,1,2,FO,0,0
+Laylene C.,3/4/2026,Garvey,Away,4,3,3,SO,0,0
+Carwyn L.,3/4/2026,Garvey,Away,4,4,1,BB,0,0
+Timothy C.,3/4/2026,Garvey,Away,4,4,1,BB,0,0
+Jordan L.,3/4/2026,Garvey,Away,4,1,0,GO,0,0
+David B.,3/12/2026,Nimitz,Away,1,0,3,SO,0,0
+Benjamen M.,3/12/2026,Nimitz,Away,1,2,1,FO,0,0
+Adrian N.,3/12/2026,Nimitz,Away,1,1,3,SO,0,0
+Justin T.,3/12/2026,Nimitz,Away,2,0,1,Single,0,0
+Carwyn L.,3/12/2026,Nimitz,Away,2,3,2,GO,0,0
+Laylene C.,3/12/2026,Nimitz,Away,2,1,1,Double,0,0
+Timothy C.,3/12/2026,Nimitz,Away,2,0,3,SO,0,0
+Jordan L.,3/12/2026,Nimitz,Away,3,4,2,BB,0,0
+Alex K.,3/12/2026,Nimitz,Away,3,0,0,GO,0,0
+David B.,3/12/2026,Nimitz,Away,3,0,0,Double,0,1
+Benjamen M.,3/12/2026,Nimitz,Away,3,0,3,SO,0,0
+Adrian N.,3/12/2026,Nimitz,Away,3,1,3,SO,0,0
+Justin T.,3/12/2026,Nimitz,Away,4,1,3,SO,0,0
+Carwyn L.,3/12/2026,Nimitz,Away,4,1,3,SO,0,0
+Laylene C.,3/12/2026,Nimitz,Away,4,0,0,Single,0,0
+Jeffrey Tran,3/12/2026,Nimitz,Away,4,1,3,SO,0,0
+David B.,3/24/2026,Walnut Park,Home,1,1,3,SO,0,0
+Laylene C.,3/24/2026,Walnut Park,Home,1,0,0,Triple,0,0
+Benjamen M.,3/24/2026,Walnut Park,Home,1,3,3,SO,0,0
+Carwyn L.,3/24/2026,Walnut Park,Home,1,1,3,SO,0,0
+Joshua R.,3/24/2026,Walnut Park,Home,2,3,3,SO,0,0
+Jordan L.,3/24/2026,Walnut Park,Home,2,2,3,SO,0,0
+Adrian N.,3/24/2026,Walnut Park,Home,2,0,0,Double,0,0
+Abel R.,3/24/2026,Walnut Park,Home,2,1,3,SO,0,0
+David B.,3/24/2026,Walnut Park,Home,3,2,3,SO,0,0
+Laylene C.,3/24/2026,Walnut Park,Home,3,1,3,SO,0,0
+Benjamen M.,3/24/2026,Walnut Park,Home,3,1,1,Single,0,0
+Alex K.,3/24/2026,Walnut Park,Home,3,0,3,SO,0,0
+David B.,3/28/2026,Garvey,Away,1,0,0,Double,1,0
+Noah H.,3/28/2026,Garvey,Away,1,1,0,HR,0,2
+Justin T.,3/28/2026,Garvey,Away,1,1,0,Single,2,0
+Benjamen M.,3/28/2026,Garvey,Away,1,1,3,SO,0,0
+Carwyn L.,3/28/2026,Garvey,Away,1,2,3,SO,0,0
+Jordan L.,3/28/2026,Garvey,Away,1,2,2,Double,1,0
+Timothy C.,3/28/2026,Garvey,Away,1,4,0,BB,1,0
+Alex K.,3/28/2026,Garvey,Away,1,2,2,Single,0,2
+Adrian N.,3/28/2026,Garvey,Away,1,1,3,SO,0,0
+David B.,3/28/2026,Garvey,Away,2,2,0,Triple,0,0
+Noah H.,3/28/2026,Garvey,Away,2,4,1,BB,0,0
+Justin T.,3/28/2026,Garvey,Away,2,3,3,SO,0,0
+Benjamen M.,3/28/2026,Garvey,Away,2,1,1,Triple,0,2
+Carwyn L.,3/28/2026,Garvey,Away,2,0,2,FO,0,0
+Jordan L.,3/28/2026,Garvey,Away,2,2,3,SO,0,0
