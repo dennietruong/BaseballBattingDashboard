@@ -2,7 +2,7 @@
 
 **Dennie Truong · Baseball Analytics · R / Shiny**
 
-[![Project](https://img.shields.io/badge/Project-Sports%20Analytics-2f6f8f)]
+[![Project](https://img.shields.io/badge/Project-Sports%20Analytics-2f6f8f)](https://dennietruong.github.io/BaseballBattingDashboard/)
 [![Focus](https://img.shields.io/badge/Focus-Baseball%20Analytics-4c956c)](https://dennietruong.github.io/BaseballBattingDashboard/)
 [![Data](https://img.shields.io/badge/Data-2025--2026-6c757d)](https://dennietruong.github.io/BaseballBattingDashboard/)
 
