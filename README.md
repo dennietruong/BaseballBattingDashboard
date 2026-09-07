@@ -2,8 +2,11 @@
 
 **Dennie Truong · Baseball Analytics · R / Shiny**
 
-An interactive baseball analytics dashboard built in **R Shiny** to collect, analyze, and visualize batting performance across the **2025 and 2026 seasons**. The dashboard transforms manually recorded plate-appearance data into traditional batting statistics and interactive visualizations, allowing individual player performance to be evaluated alongside team averages.
+[![Project](https://img.shields.io/badge/Project-Sports%20Analytics-2f6f8f)](https://github.com/)
+[![Focus](https://img.shields.io/badge/Focus-Baseball%20Analytics-4c956c)](https://dennietruong.github.io/BaseballBattingDashboard/)
+[![Data](https://img.shields.io/badge/Data-2025--2026-6c757d)](https://dennietruong.github.io/BaseballBattingDashboard/)
 
+> **An interactive R Shiny dashboard for analyzing individual and team batting performance across the 2025 and 2026 baseball seasons.**
 **Live Dashboard:** [Baseball Batting Dashboard](https://dennietruong.github.io/BaseballBattingDashboard/)
 
 ---
