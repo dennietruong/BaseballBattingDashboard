@@ -15,7 +15,7 @@
 
 This project was developed to explore how data collection, statistical analysis, and interactive visualization can be applied to baseball performance.
 
-I manually recorded game-level batting data throughout the 2025 and 2026 seasons and developed an R Shiny application to transform those observations into player-level statistics and performance visualizations.
+I recorded game-level batting data throughout the 2025 and 2026 seasons and developed an R Shiny application to transform those observations into player-level statistics and performance visualizations.
 
 The dashboard allows users to:
 
